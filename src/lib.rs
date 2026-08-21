@@ -4,6 +4,9 @@
 
 use serde::Serialize;
 
+pub mod mcp;
+pub mod server;
+
 /// One decoded instruction.
 #[derive(Debug, Clone, Serialize)]
 pub struct Ins {
@@ -140,11 +143,88 @@ pub fn render(ins: &[Ins]) -> String {
     out
 }
 
-/// Disassembly plus a summary of flagged opcodes, as JSON.
+fn is_terminator(name: &str) -> bool {
+    matches!(
+        name,
+        "JUMP" | "JUMPI" | "STOP" | "RETURN" | "REVERT" | "SELFDESTRUCT" | "INVALID"
+    )
+}
+
+/// Split the instruction stream into basic blocks. Leaders are pc 0, every
+/// JUMPDEST, and the instruction after any terminator. Returns (start_pc, end_pc).
+pub fn basic_blocks(ins: &[Ins]) -> Vec<(usize, usize)> {
+    use std::collections::BTreeSet;
+    let mut leaders: BTreeSet<usize> = BTreeSet::new();
+    leaders.insert(0);
+    for (i, w) in ins.iter().enumerate() {
+        if w.name == "JUMPDEST" {
+            leaders.insert(i);
+        }
+        if is_terminator(&w.name) && i + 1 < ins.len() {
+            leaders.insert(i + 1);
+        }
+    }
+    let ls: Vec<usize> = leaders.into_iter().collect();
+    let mut blocks = Vec::new();
+    for (idx, &l) in ls.iter().enumerate() {
+        let end_idx = if idx + 1 < ls.len() { ls[idx + 1] } else { ins.len() };
+        let start_pc = ins[l].pc;
+        let end_pc = ins.get(end_idx).map(|i| i.pc).unwrap_or_else(|| {
+            ins.last().map(|i| i.pc + 1 + i.operand.as_ref().map_or(0, |o| o.len() / 2)).unwrap_or(0)
+        });
+        blocks.push((start_pc, end_pc));
+    }
+    blocks
+}
+
+/// Recover function selectors from the standard solc dispatcher pattern
+/// (`PUSH4 <selector> ... EQ ... PUSH<dest> JUMPI`). Heuristic, so it can miss
+/// non-standard dispatchers; it reports (selector hex, jump destination pc).
+pub fn selectors(ins: &[Ins]) -> Vec<(String, Option<u64>)> {
+    let mut out: Vec<(String, Option<u64>)> = Vec::new();
+    for (i, w) in ins.iter().enumerate() {
+        if w.name != "PUSH4" {
+            continue;
+        }
+        let sel = match &w.operand {
+            Some(s) if s.len() == 8 => s.clone(),
+            _ => continue,
+        };
+        let mut has_eq = false;
+        let mut dest: Option<u64> = None;
+        for k in (i + 1)..(i + 8).min(ins.len()) {
+            let nk = &ins[k];
+            if nk.name == "EQ" {
+                has_eq = true;
+            }
+            if nk.name.starts_with("PUSH") && nk.name != "PUSH4" {
+                if let Some(o) = &nk.operand {
+                    dest = u64::from_str_radix(o, 16).ok();
+                }
+            }
+            if nk.name == "JUMPI" && has_eq {
+                if !out.iter().any(|(s, _)| *s == sel) {
+                    out.push((sel.clone(), dest));
+                }
+                break;
+            }
+        }
+    }
+    out
+}
+
+/// Full analysis as JSON: instructions, basic blocks, recovered selectors, flags.
 pub fn disasm_json(code: &[u8]) -> serde_json::Value {
     let ins = disasm(code);
     let flagged: Vec<&Ins> = ins.iter().filter(|i| i.flag.is_some()).collect();
+    let blocks = basic_blocks(&ins);
+    let sels = selectors(&ins);
     serde_json::json!({
+        "byte_len": code.len(),
+        "instruction_count": ins.len(),
+        "block_count": blocks.len(),
+        "blocks": blocks.iter().map(|(s, e)| serde_json::json!({ "start_pc": s, "end_pc": e })).collect::<Vec<_>>(),
+        "selectors": sels.iter().map(|(s, d)| serde_json::json!({ "selector": format!("0x{s}"), "dest_pc": d })).collect::<Vec<_>>(),
         "instructions": ins,
         "flagged_count": flagged.len(),
         "flags": flagged.iter().map(|i| serde_json::json!({
@@ -205,5 +285,23 @@ mod tests {
     fn parse_hex_handles_prefix_and_odd() {
         assert!(parse_hex("0x6001").is_ok());
         assert!(parse_hex("601").is_err());
+    }
+
+    #[test]
+    fn recovers_function_selector() {
+        // DUP1 PUSH4 12345678 EQ PUSH2 0010 JUMPI
+        let ins = disasm(&parse_hex("8063123456781461001057").unwrap());
+        let sels = selectors(&ins);
+        assert_eq!(sels.len(), 1);
+        assert_eq!(sels[0].0, "12345678");
+        assert_eq!(sels[0].1, Some(0x10));
+    }
+
+    #[test]
+    fn splits_basic_blocks_at_jumpdest() {
+        // PUSH1 00 JUMP JUMPDEST STOP  => leaders at 0, after JUMP, and JUMPDEST
+        let ins = disasm(&parse_hex("6000565b00").unwrap());
+        let blocks = basic_blocks(&ins);
+        assert!(blocks.len() >= 2);
     }
 }

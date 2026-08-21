@@ -24,6 +24,13 @@ enum Cmd {
         #[arg(long)]
         flags_only: bool,
     },
+    /// Serve the HTTP API + paste-bytecode console.
+    Serve {
+        #[arg(long, default_value_t = 8080)]
+        port: u16,
+    },
+    /// Run as an MCP server over stdio so an agent can disassemble bytecode.
+    Mcp,
 }
 
 fn load(input: &str) -> Result<Vec<u8>> {
@@ -58,6 +65,8 @@ fn main() -> Result<()> {
                 eprintln!("\n{n} flagged opcode(s)");
             }
         }
+        Cmd::Serve { port } => unweave::server::serve(port)?,
+        Cmd::Mcp => unweave::mcp::serve_mcp()?,
     }
     Ok(())
 }
