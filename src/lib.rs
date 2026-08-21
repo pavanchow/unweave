@@ -216,8 +216,8 @@ pub fn selectors(ins: &[Ins]) -> Vec<(String, Option<u64>)> {
         };
         let mut has_eq = false;
         let mut dest: Option<u64> = None;
-        for k in (i + 1)..(i + 8).min(ins.len()) {
-            let nk = &ins[k];
+        let end = (i + 8).min(ins.len());
+        for nk in &ins[i + 1..end] {
             if nk.name == "EQ" {
                 has_eq = true;
             }
