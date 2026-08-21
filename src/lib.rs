@@ -117,6 +117,11 @@ pub fn parse_hex(s: &str) -> Result<Vec<u8>, String> {
     if !cleaned.is_ascii() {
         return Err("hex contains non-hex characters".into());
     }
+    // Deployed contracts cap at 24KB and initcode rarely tops 1MB. Reject 2MB+
+    // so a hostile string cannot pin CPU/OOM the disassembler and JSON serializer.
+    if cleaned.len() > 4_000_000 {
+        return Err("bytecode exceeds 2MB limit".into());
+    }
     if cleaned.len() % 2 != 0 {
         return Err("hex has an odd number of digits".into());
     }
@@ -345,6 +350,14 @@ mod tests {
         let v = disasm_json(&code);
         assert_eq!(v["instruction_count"], 0);
         assert_eq!(v["block_count"], 0);
+    }
+
+    #[test]
+    fn oversize_input_is_rejected() {
+        let big = "5b".repeat(2_000_001); // just over 4M hex chars
+        assert!(parse_hex(&big).is_err());
+        let ok = "5b".repeat(1000);
+        assert!(parse_hex(&ok).is_ok());
     }
 
     #[test]

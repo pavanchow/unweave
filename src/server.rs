@@ -34,8 +34,22 @@ pub fn serve(port: u16) -> Result<()> {
 }
 
 async fn disasm(Json(req): Json<Req>) -> impl IntoResponse {
-    match crate::parse_hex(&req.hex) {
-        Ok(code) => (StatusCode::OK, Json(crate::disasm_json(&code))),
-        Err(e) => (StatusCode::BAD_REQUEST, Json(json!({ "error": e }))),
+    let code = match crate::parse_hex(&req.hex) {
+        Ok(code) => code,
+        Err(e) => return (StatusCode::BAD_REQUEST, Json(json!({ "error": e }))),
+    };
+    // Analysis is CPU-bound: run it off the async pool and cap it so one request
+    // cannot starve the server.
+    let work = tokio::task::spawn_blocking(move || crate::disasm_json(&code));
+    match tokio::time::timeout(std::time::Duration::from_secs(3), work).await {
+        Ok(Ok(v)) => (StatusCode::OK, Json(v)),
+        Ok(Err(_)) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({ "error": "analysis failed" })),
+        ),
+        Err(_) => (
+            StatusCode::GATEWAY_TIMEOUT,
+            Json(json!({ "error": "analysis timed out" })),
+        ),
     }
 }
