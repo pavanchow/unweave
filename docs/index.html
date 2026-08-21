@@ -1,12 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>unweave</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unweave: an EVM bytecode disassembler that reconstructs intent and flags dangerous opcodes</title>
+  <meta name="description" content="Unweave is an EVM bytecode disassembler that reconstructs intent and flags dangerous opcodes: delegatecall, callcode, selfdestruct, external call, create2, tx.origin auth. Smart-contract security tooling for auditors and agents. By Pavan Nallamothu.">
+  <meta name="author" content="Pavan Nallamothu">
+  <meta name="keywords" content="EVM disassembler, EVM bytecode, smart contract security, delegatecall, selfdestruct, Ethereum, opcode, reverse engineering, Web3 audit, Pavan Nallamothu">
+  <link rel="canonical" href="https://pavanchow.github.io/unweave/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Unweave: an EVM bytecode disassembler that reconstructs intent and flags dangerous opcodes">
+  <meta property="og:description" content="Correct disassembly where the security-relevant opcodes are flagged inline with severity and a one-line explanation. By Pavan Nallamothu.">
+  <meta property="og:url" content="https://pavanchow.github.io/unweave/">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Unweave","applicationCategory":"SecurityApplication","softwareVersion":"0.2.0","author":{"@type":"Person","name":"Pavan Nallamothu"},"description":"An EVM bytecode disassembler that reconstructs intent and flags dangerous opcodes.","url":"https://pavanchow.github.io/unweave/","codeRepository":"https://github.com/pavanchow/unweave"}
+  </script>
+  <style>
+    :root{--bg:#0d1117;--ink:#e6edf3;--muted:#8b949e;--line:#21262d;--accent:#58a6ff;
+      --crit:#f85149;--high:#db6d28;--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--ink);
+      font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:1000px;margin:0 auto;padding:0 28px}
+    nav{display:flex;justify-content:space-between;align-items:center;height:66px}
+    nav .v{color:var(--muted);font-family:var(--mono);font-size:12.5px}
+    section{padding:110px 0;border-top:1px solid var(--line)}
+    section:first-of-type{border-top:none}
+    .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);text-align:center}
+    h1{font-size:clamp(38px,6.6vw,70px);line-height:1.05;letter-spacing:-0.03em;font-weight:680;text-align:center;margin:24px 0 0}
+    .hero p{max-width:680px;margin:30px auto 0;text-align:center;font-size:clamp(17px,2.2vw,21px);color:var(--muted)}
+    .cta{display:flex;justify-content:center;margin-top:42px}
+    .btn{display:inline-block;padding:13px 26px;border-radius:10px;background:var(--accent);color:#0d1117;font-weight:700;text-decoration:none}
+    h2{font-size:clamp(26px,4.2vw,44px);line-height:1.12;letter-spacing:-0.025em;font-weight:660;text-align:center;max-width:760px;margin:0 auto}
+    .lead{max-width:620px;margin:26px auto 0;text-align:center;color:var(--muted);font-size:18px}
+    .asm{max-width:720px;margin:48px auto 0;background:#161b22;border:1px solid var(--line);border-radius:12px;padding:20px 22px;font-family:var(--mono);font-size:14px}
+    .asm .l{display:flex;gap:14px;padding:2px 0}.asm .pc{color:var(--muted);width:56px}.asm .danger{color:var(--crit);font-weight:700}.asm .imm{color:var(--accent)}
+    .asm .note{color:var(--high);font-size:12.5px;padding:2px 0 8px 70px}
+    .rows{max-width:760px;margin:40px auto 0}
+    .rows .r{display:grid;grid-template-columns:minmax(140px,1fr) 2fr;gap:12px 34px;padding:24px 0;border-top:1px solid var(--line)}
+    .rows .r b{font-size:18px}.rows .r p{color:var(--muted)}
+    footer{padding:66px 0;border-top:1px solid var(--line);text-align:center;color:var(--muted)}
+    footer a{color:var(--accent);text-decoration:none;font-family:var(--mono);font-size:14px}
+  </style>
 </head>
 <body>
-<h1>unweave</h1>
-<p>Site coming soon.</p>
-<p><a href="https://github.com/pavanchow/unweave">View repository</a></p>
+  <div class="wrap">
+    <nav><b>Unweave</b><span class="v">v0.2.0</span></nav>
+
+    <section class="hero">
+      <p class="eyebrow">EVM bytecode, decoded and judged</p>
+      <h1>The disassembler that<br>names the danger.</h1>
+      <p>Unweave is an EVM bytecode disassembler that reconstructs intent and flags dangerous opcodes. A delegatecall is not just 0xf4, it is a proxy-takeover vector, and Unweave says so, inline.</p>
+      <div class="cta"><a class="btn" href="https://github.com/pavanchow/unweave">View on GitHub</a></div>
+    </section>
+
+    <section>
+      <h2>Most tools list mnemonics. Unweave names the meaning.</h2>
+      <div class="asm">
+        <div class="l"><span class="pc">0000</span><span>PUSH1 <span class="imm">0x01</span></span></div>
+        <div class="l"><span class="pc">0002</span><span>PUSH1 <span class="imm">0x00</span></span></div>
+        <div class="l"><span class="pc">0004</span><span>SSTORE</span></div>
+        <div class="l"><span class="pc">0005</span><span class="danger">DELEGATECALL</span></div>
+        <div class="note">! [critical] runs external code in THIS contract's context and storage. The classic proxy takeover and storage-collision vector.</div>
+        <div class="l"><span class="pc">0006</span><span class="danger">SELFDESTRUCT</span></div>
+        <div class="note">! [high] destroys the contract and force-sends its balance.</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>How it differs</h2>
+      <div class="rows">
+        <div class="r"><b>evmdis, ethersplay</b><p>Give you a correct opcode listing. You supply the EVM security knowledge for every line.</p></div>
+        <div class="r"><b>Panoramix, heimdall</b><p>Decompile to pseudo-Solidity. Powerful and heavy, and not always right.</p></div>
+        <div class="r"><b>Unweave</b><p>The fast middle: correct disassembly with the dangerous opcodes flagged inline, plus basic blocks and recovered function selectors. And an MCP tool so an agent can ask "does this delegatecall".</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Flags the primitives that matter.</h2>
+      <p class="lead">delegatecall, callcode, selfdestruct, external call, create2, and tx.origin authorization. Each with a severity and a one-line reason.</p>
+    </section>
+
+    <footer>
+      <p>An EVM disassembler for auditors and agents.</p>
+      <p style="margin-top:14px"><a href="https://github.com/pavanchow/unweave">github.com/pavanchow/unweave</a></p>
+      <p style="margin-top:14px">By Pavan Nallamothu.</p>
+    </footer>
+  </div>
 </body>
 </html>
