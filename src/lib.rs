@@ -108,6 +108,12 @@ pub fn disasm(code: &[u8]) -> Vec<Ins> {
 
 /// Parse a hex string (optional `0x`, whitespace ignored) into bytes.
 pub fn parse_hex(s: &str) -> Result<Vec<u8>, String> {
+    // Coarse guard on the RAW input, before any allocation. 2MB of bytecode is
+    // 4M hex chars; a legitimate input plus 0x and whitespace stays well under
+    // this, so a hostile 500MB string is rejected without cleaning/collecting it.
+    if s.len() > 5_000_000 {
+        return Err("bytecode exceeds 2MB limit".into());
+    }
     let trimmed = s.trim();
     let body = trimmed
         .strip_prefix("0x")
@@ -358,6 +364,13 @@ mod tests {
         assert!(parse_hex(&big).is_err());
         let ok = "5b".repeat(1000);
         assert!(parse_hex(&ok).is_ok());
+    }
+
+    #[test]
+    fn huge_raw_input_rejected_before_allocation() {
+        // A 6MB raw string is rejected by the coarse guard before cleaning.
+        let hostile = "a".repeat(6_000_000);
+        assert_eq!(parse_hex(&hostile), Err("bytecode exceeds 2MB limit".into()));
     }
 
     #[test]

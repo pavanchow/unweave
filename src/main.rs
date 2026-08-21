@@ -34,7 +34,12 @@ enum Cmd {
 }
 
 fn load(input: &str) -> Result<Vec<u8>> {
-    let text = if std::path::Path::new(input).is_file() {
+    let path = std::path::Path::new(input);
+    let text = if path.is_file() {
+        // Reject an oversized file before reading it into memory.
+        if std::fs::metadata(path)?.len() > 5_000_000 {
+            return Err(anyhow!("bytecode file exceeds 2MB limit"));
+        }
         std::fs::read_to_string(input)?
     } else {
         input.to_string()

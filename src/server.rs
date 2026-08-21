@@ -5,6 +5,7 @@
 
 use anyhow::Result;
 use axum::{
+    extract::DefaultBodyLimit,
     http::StatusCode,
     response::{Html, IntoResponse},
     routing::{get, post},
@@ -22,7 +23,10 @@ pub fn serve(port: u16) -> Result<()> {
     let app = Router::new()
         .route("/", get(|| async { Html(include_str!("ui.html")) }))
         .route("/health", get(|| async { "ok" }))
-        .route("/disasm", post(disasm));
+        .route("/disasm", post(disasm))
+        // Explicit 4MB body cap so an oversized payload is rejected at the edge
+        // (413) before it reaches parse_hex. Not left to axum's implicit default.
+        .layer(DefaultBodyLimit::max(4 * 1024 * 1024));
     let rt = tokio::runtime::Runtime::new()?;
     rt.block_on(async move {
         let listener = tokio::net::TcpListener::bind(("127.0.0.1", port)).await?;
