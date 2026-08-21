@@ -55,10 +55,11 @@ fn opcode(op: u8) -> (String, usize) {
         0x3e => "RETURNDATACOPY", 0x3f => "EXTCODEHASH",
         0x40 => "BLOCKHASH", 0x41 => "COINBASE", 0x42 => "TIMESTAMP", 0x43 => "NUMBER",
         0x44 => "PREVRANDAO", 0x45 => "GASLIMIT", 0x46 => "CHAINID", 0x47 => "SELFBALANCE",
-        0x48 => "BASEFEE",
+        0x48 => "BASEFEE", 0x49 => "BLOBHASH", 0x4a => "BLOBBASEFEE",
         0x50 => "POP", 0x51 => "MLOAD", 0x52 => "MSTORE", 0x53 => "MSTORE8", 0x54 => "SLOAD",
         0x55 => "SSTORE", 0x56 => "JUMP", 0x57 => "JUMPI", 0x58 => "PC", 0x59 => "MSIZE",
-        0x5a => "GAS", 0x5b => "JUMPDEST", 0x5f => "PUSH0",
+        0x5a => "GAS", 0x5b => "JUMPDEST",
+        0x5c => "TLOAD", 0x5d => "TSTORE", 0x5e => "MCOPY", 0x5f => "PUSH0",
         0xf0 => "CREATE", 0xf1 => "CALL", 0xf2 => "CALLCODE", 0xf3 => "RETURN",
         0xf4 => "DELEGATECALL", 0xf5 => "CREATE2", 0xfa => "STATICCALL", 0xfd => "REVERT",
         0xfe => "INVALID", 0xff => "SELFDESTRUCT",
@@ -80,6 +81,7 @@ fn danger(op: u8) -> Option<Flag> {
         0xf1 => ("medium", "call: external call with value/gas to an arbitrary address. Check reentrancy and the return value."),
         0xf5 => ("low", "create2: deploys to a deterministic, precomputable address. Watch for address-reuse tricks."),
         0x32 => ("medium", "tx.origin: using ORIGIN for authorization is a known phishing/bypass vector; prefer CALLER."),
+        0x5d => ("low", "tstore: transient storage. If a reentrancy guard leans on it, check the flag is cleared on every path, including reverts."),
         _ => return None,
     };
     Some(Flag { severity: sev.into(), note: note.into() })
@@ -113,6 +115,9 @@ pub fn parse_hex(s: &str) -> Result<Vec<u8>, String> {
         .chars()
         .filter(|c| !c.is_whitespace())
         .collect();
+    if !cleaned.is_ascii() {
+        return Err("hex contains non-hex characters".into());
+    }
     if cleaned.len() % 2 != 0 {
         return Err("hex has an odd number of digits".into());
     }
@@ -182,6 +187,12 @@ pub fn basic_blocks(ins: &[Ins]) -> Vec<(usize, usize)> {
 /// non-standard dispatchers; it reports (selector hex, jump destination pc).
 pub fn selectors(ins: &[Ins]) -> Vec<(String, Option<u64>)> {
     let mut out: Vec<(String, Option<u64>)> = Vec::new();
+    // A real dispatcher loads the 4-byte selector from calldata before comparing.
+    // Without a CALLDATALOAD, a PUSH4...EQ...JUMPI is an incidental constant compare.
+    let has_calldata = ins.iter().any(|w| w.name == "CALLDATALOAD");
+    if !has_calldata {
+        return out;
+    }
     for (i, w) in ins.iter().enumerate() {
         if w.name != "PUSH4" {
             continue;
@@ -289,12 +300,37 @@ mod tests {
 
     #[test]
     fn recovers_function_selector() {
-        // DUP1 PUSH4 12345678 EQ PUSH2 0010 JUMPI
-        let ins = disasm(&parse_hex("8063123456781461001057").unwrap());
+        // CALLDATALOAD DUP1 PUSH4 12345678 EQ PUSH2 0010 JUMPI
+        let ins = disasm(&parse_hex("358063123456781461001057").unwrap());
         let sels = selectors(&ins);
         assert_eq!(sels.len(), 1);
         assert_eq!(sels[0].0, "12345678");
         assert_eq!(sels[0].1, Some(0x10));
+    }
+
+    #[test]
+    fn selector_needs_calldata_context() {
+        // Same PUSH4...EQ...JUMPI shape but no CALLDATALOAD: not a dispatcher.
+        let ins = disasm(&parse_hex("600063deadbeef14600a57").unwrap());
+        assert!(selectors(&ins).is_empty());
+    }
+
+    #[test]
+    fn parse_hex_rejects_non_ascii_without_panicking() {
+        assert!(parse_hex("€€").is_err());
+        assert!(parse_hex("60zz").is_err());
+    }
+
+    #[test]
+    fn decodes_cancun_opcodes() {
+        // TLOAD TSTORE MCOPY BLOBHASH BLOBBASEFEE
+        let ins = disasm(&parse_hex("5c5d5e494a").unwrap());
+        assert_eq!(ins[0].name, "TLOAD");
+        assert_eq!(ins[1].name, "TSTORE");
+        assert_eq!(ins[2].name, "MCOPY");
+        assert_eq!(ins[3].name, "BLOBHASH");
+        assert_eq!(ins[4].name, "BLOBBASEFEE");
+        assert!(ins[1].flag.is_some());
     }
 
     #[test]
