@@ -128,7 +128,7 @@ pub fn parse_hex(s: &str) -> Result<Vec<u8>, String> {
     if cleaned.len() > 4_000_000 {
         return Err("bytecode exceeds 2MB limit".into());
     }
-    if cleaned.len() % 2 != 0 {
+    if !cleaned.len().is_multiple_of(2) {
         return Err("hex has an odd number of digits".into());
     }
     (0..cleaned.len())
