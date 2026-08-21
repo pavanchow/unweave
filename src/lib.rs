@@ -108,13 +108,12 @@ pub fn disasm(code: &[u8]) -> Vec<Ins> {
 
 /// Parse a hex string (optional `0x`, whitespace ignored) into bytes.
 pub fn parse_hex(s: &str) -> Result<Vec<u8>, String> {
-    let cleaned: String = s
-        .trim()
-        .trim_start_matches("0x")
-        .trim_start_matches("0X")
-        .chars()
-        .filter(|c| !c.is_whitespace())
-        .collect();
+    let trimmed = s.trim();
+    let body = trimmed
+        .strip_prefix("0x")
+        .or_else(|| trimmed.strip_prefix("0X"))
+        .unwrap_or(trimmed);
+    let cleaned: String = body.chars().filter(|c| !c.is_whitespace()).collect();
     if !cleaned.is_ascii() {
         return Err("hex contains non-hex characters".into());
     }
@@ -159,6 +158,9 @@ fn is_terminator(name: &str) -> bool {
 /// JUMPDEST, and the instruction after any terminator. Returns (start_pc, end_pc).
 pub fn basic_blocks(ins: &[Ins]) -> Vec<(usize, usize)> {
     use std::collections::BTreeSet;
+    if ins.is_empty() {
+        return Vec::new();
+    }
     let mut leaders: BTreeSet<usize> = BTreeSet::new();
     leaders.insert(0);
     for (i, w) in ins.iter().enumerate() {
@@ -331,6 +333,24 @@ mod tests {
         assert_eq!(ins[3].name, "BLOBHASH");
         assert_eq!(ins[4].name, "BLOBBASEFEE");
         assert!(ins[1].flag.is_some());
+    }
+
+    #[test]
+    fn empty_input_does_not_panic() {
+        let code = parse_hex("").unwrap();
+        assert!(code.is_empty());
+        assert!(disasm(&code).is_empty());
+        assert!(basic_blocks(&disasm(&code)).is_empty());
+        // disasm_json walks basic_blocks/selectors, so this is the surface that crashed.
+        let v = disasm_json(&code);
+        assert_eq!(v["instruction_count"], 0);
+        assert_eq!(v["block_count"], 0);
+    }
+
+    #[test]
+    fn doubled_prefix_is_rejected() {
+        // Strip one 0x prefix only, matching the JS engine on the website.
+        assert!(parse_hex("0x0x6001").is_err());
     }
 
     #[test]
