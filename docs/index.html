@@ -8,6 +8,7 @@
   <meta name="author" content="Pavan Nallamothu (pavanchow)">
   <meta name="keywords" content="EVM disassembler, EVM bytecode, smart contract security, delegatecall, selfdestruct, Ethereum, opcode, reverse engineering, Web3 audit, Pavan Nallamothu, pavanchow">
   <link rel="canonical" href="https://pavanchow.github.io/unweave/">
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Unweave: an EVM bytecode disassembler that reconstructs intent and flags dangerous opcodes">
   <meta property="og:description" content="Correct disassembly where the security-relevant opcodes are flagged inline with severity and a one-line explanation. Try it live in the browser. By Pavan Nallamothu (pavanchow).">
@@ -132,6 +133,7 @@
   </div></nav>
 
   <div class="hero">
+    <img src="logo.svg" alt="Unweave logo" width="72" height="72">
     <p class="eyebrow">EVM bytecode, decoded and judged</p>
     <h1>The disassembler that<br>names the danger.</h1>
     <p class="sub">Unweave is an EVM bytecode disassembler that reconstructs intent and flags dangerous opcodes. A delegatecall is not just 0xf4, it is a proxy-takeover vector, and Unweave says so, inline.</p>
@@ -142,6 +144,12 @@
   </div>
 
   <div id="try" class="stage">
+    <details style="margin:0 0 22px;border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:0 18px;">
+      <summary style="cursor:pointer;padding:15px 0;font-weight:650;color:var(--ink);">How to use this playground</summary>
+      <div style="padding:0 0 16px;color:var(--muted);font-size:15px;line-height:1.6;">
+        Paste EVM runtime bytecode (hex, with or without the <code>0x</code> prefix) into the box below and press <em>Disassemble</em>. Unweave decodes every opcode with its PUSH immediates, splits the code into basic blocks, recovers function selectors, and flags the security-relevant opcodes inline with a severity and a one-line reason. Dangerous opcodes (<code>DELEGATECALL</code>, <code>CALLCODE</code>, <code>SELFDESTRUCT</code>, <code>CALL</code>, <code>ORIGIN</code>, <code>CREATE2</code>) are highlighted so you see them first. Try one of the sample chips, or paste a real contract's bytecode. Everything runs client-side; nothing leaves the page.
+      </div>
+    </details>
     <div class="card demo">
       <div class="chips" id="chips"></div>
       <textarea id="hex" spellcheck="false" placeholder="0x60016000556000600060006000600073...f4"></textarea>

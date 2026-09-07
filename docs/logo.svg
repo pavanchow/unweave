@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Unweave logo">
+  <!-- two interwoven strands on the left, unwoven and separated on the right -->
+  <path d="M16 48 C 34 48, 34 80, 52 80 C 70 80, 70 48, 88 48 L 112 48"
+        fill="none" stroke="#0071e3" stroke-width="9" stroke-linecap="round"/>
+  <path d="M16 80 C 34 80, 34 48, 52 48 C 70 48, 70 80, 88 80 L 104 92"
+        fill="none" stroke="#d70015" stroke-width="9" stroke-linecap="round"/>
+  <!-- danger flag on the strand that got pulled loose -->
+  <circle cx="106" cy="94" r="11" fill="#d70015"/>
+  <rect x="103.5" y="88" width="5" height="8" rx="2.5" fill="#fff"/>
+  <circle cx="106" cy="100" r="2.6" fill="#fff"/>
+</svg>

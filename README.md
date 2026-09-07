@@ -1,3 +1,5 @@
+<img src="docs/logo.svg" alt="Unweave logo" width="96">
+
 # Unweave
 
 **An EVM bytecode disassembler that reconstructs intent and flags dangerous opcodes.**
