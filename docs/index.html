@@ -3,19 +3,36 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Unweave: an EVM bytecode disassembler that reconstructs intent and flags dangerous opcodes</title>
-  <meta name="description" content="Unweave is an EVM bytecode disassembler that reconstructs intent and flags dangerous opcodes: delegatecall, callcode, selfdestruct, external call, create2, tx.origin auth. Smart-contract security tooling for auditors and agents. By Pavan Nallamothu (pavanchow).">
-  <meta name="author" content="Pavan Nallamothu (pavanchow)">
-  <meta name="keywords" content="EVM disassembler, EVM bytecode, smart contract security, delegatecall, selfdestruct, Ethereum, opcode, reverse engineering, Web3 audit, Pavan Nallamothu, pavanchow">
+  <title>Unweave: EVM bytecode disassembler in Rust | Pavan Nallamothu</title>
+  <meta name="description" content="Unweave is an EVM bytecode disassembler in Rust that reconstructs intent and flags dangerous opcodes like delegatecall and selfdestruct, by Pavan Nallamothu.">
+  <meta name="keywords" content="unweave, EVM bytecode disassembler, EVM disassembler in Rust, smart contract security, delegatecall, selfdestruct, tx.origin, create2, Ethereum bytecode, opcode analysis, reverse engineering smart contracts, Web3 audit tooling, unweave rust, Pavan Nallamothu, pavanchow">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="author" content="Pavan Nallamothu">
+  <meta name="theme-color" content="#0071e3">
   <link rel="canonical" href="https://pavanchow.github.io/unweave/">
   <link rel="icon" type="image/svg+xml" href="logo.svg">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Unweave: an EVM bytecode disassembler that reconstructs intent and flags dangerous opcodes">
-  <meta property="og:description" content="Correct disassembly where the security-relevant opcodes are flagged inline with severity and a one-line explanation. Try it live in the browser. By Pavan Nallamothu (pavanchow).">
+  <meta property="og:site_name" content="Pavan Nallamothu">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:title" content="Unweave: EVM bytecode disassembler in Rust">
+  <meta property="og:description" content="An EVM bytecode disassembler in Rust that reconstructs intent and flags dangerous opcodes like delegatecall and selfdestruct, by Pavan Nallamothu.">
   <meta property="og:url" content="https://pavanchow.github.io/unweave/">
-  <meta name="twitter:card" content="summary">
+  <meta property="og:image" content="https://pavanchow.github.io/unweave/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Unweave by Pavan Nallamothu">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Unweave: EVM bytecode disassembler in Rust">
+  <meta name="twitter:description" content="An EVM bytecode disassembler in Rust that reconstructs intent and flags dangerous opcodes like delegatecall and selfdestruct, by Pavan Nallamothu.">
+  <meta name="twitter:image" content="https://pavanchow.github.io/unweave/og-image.png">
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Unweave","applicationCategory":"SecurityApplication","softwareVersion":"0.2.4","author":{"@type":"Person","name":"Pavan Nallamothu"},"description":"An EVM bytecode disassembler that reconstructs intent and flags dangerous opcodes.","url":"https://pavanchow.github.io/unweave/","codeRepository":"https://github.com/pavanchow/unweave"}
+  {"@context":"https://schema.org","@graph":[
+  {"@type":"SoftwareApplication","@id":"https://pavanchow.github.io/unweave/#software","name":"Unweave","alternateName":"unweave","applicationCategory":"SecurityApplication","operatingSystem":"Linux, macOS, Windows","description":"An EVM bytecode disassembler in Rust that reconstructs intent and flags dangerous opcodes inline with severity, including delegatecall, callcode, selfdestruct, create2, and tx.origin auth.","url":"https://pavanchow.github.io/unweave/","image":"https://pavanchow.github.io/unweave/og-image.png","softwareVersion":"0.2.4","programmingLanguage":"Rust","codeRepository":"https://github.com/pavanchow/unweave","datePublished":"2026-08-21","author":{"@id":"https://github.com/pavanchow#person"},"publisher":{"@id":"https://github.com/pavanchow#person"},"keywords":"EVM bytecode disassembler, EVM disassembler in Rust, smart contract security, delegatecall, selfdestruct, tx.origin, create2, Ethereum bytecode, Web3 audit tooling","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Disassembles EVM bytecode to opcodes","Reconstructs control flow and intent","Flags dangerous opcodes inline with severity","Covers delegatecall, callcode, selfdestruct, create2, and tx.origin auth","Runs in the browser and from the CLI"]},
+  {"@type":"Person","@id":"https://github.com/pavanchow#person","name":"Pavan Nallamothu","alternateName":"pavanchow","url":"https://github.com/pavanchow","jobTitle":"Software Engineer and Security Researcher","knowsAbout":["Rust","EVM","Ethereum","smart contract security","bytecode analysis","reverse engineering"],"sameAs":["https://github.com/pavanchow","https://hackerone.com/pavanchow"]},
+  {"@type":"WebSite","@id":"https://pavanchow.github.io/unweave/#website","name":"Unweave by Pavan Nallamothu","url":"https://pavanchow.github.io/unweave/","author":{"@id":"https://github.com/pavanchow#person"}},
+  {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pavan Nallamothu","item":"https://github.com/pavanchow"},{"@type":"ListItem","position":2,"name":"Unweave","item":"https://pavanchow.github.io/unweave/"}]},
+  {"@type":"WebPage","@id":"https://pavanchow.github.io/unweave/#webpage","url":"https://pavanchow.github.io/unweave/","name":"Unweave: EVM bytecode disassembler in Rust | Pavan Nallamothu","isPartOf":{"@id":"https://pavanchow.github.io/unweave/#website"},"about":{"@id":"https://pavanchow.github.io/unweave/#software"},"author":{"@id":"https://github.com/pavanchow#person"},"inLanguage":"en"}
+  ]}
   </script>
   <style>
     :root{
@@ -118,9 +135,6 @@
     footer .name{color:var(--ink);font-weight:600}
   </style>
 <link rel="author" href="https://github.com/pavanchow">
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"Person","name":"Pavan Nallamothu","alternateName":"pavanchow","url":"https://github.com/pavanchow","sameAs":["https://github.com/pavanchow","https://hackerone.com/pavanchow"]}
-</script>
 </head>
 <body>
   <nav><div class="row">
@@ -214,6 +228,17 @@
     <p>An EVM disassembler for auditors and agents.</p>
     <p style="margin-top:12px"><a href="https://github.com/pavanchow/unweave">github.com/pavanchow/unweave</a></p>
     <p style="margin-top:12px">By <span class="name">Pavan Nallamothu</span>.</p>
+    <div style="max-width:760px;margin:34px auto 0;padding-top:26px;border-top:1px solid var(--line);text-align:left">
+      <p style="font-weight:600;color:var(--ink);margin-bottom:10px">More open-source tools by Pavan Nallamothu</p>
+      <p style="font-size:14px;line-height:1.95;color:var(--muted)">
+        <a href="https://pavanchow.github.io/lint-owl/">Lint-Owl, a source-to-sink static analyzer</a> ·
+        <a href="https://pavanchow.github.io/oracle/">Oracle, an attack-path query language</a> ·
+        <a href="https://pavanchow.github.io/veilproof/">Veilproof, a zero-knowledge proof system in Rust</a> ·
+        <a href="https://pavanchow.github.io/ironchain/">Ironchain, a proof-of-work blockchain in Rust</a> ·
+        <a href="https://pavanchow.github.io/cipherlock/">Cipherlock, authenticated encryption in Rust</a> ·
+        <a href="https://github.com/pavanchow">All projects on GitHub</a>
+      </p>
+    </div>
   </footer>
 
   <script>
