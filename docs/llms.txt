@@ -1,0 +1,21 @@
+# Unweave: an EVM bytecode disassembler in Rust
+
+> Unweave is an EVM bytecode disassembler in Rust by Pavan Nallamothu that reconstructs intent and flags dangerous opcodes.
+
+Unweave disassembles EVM bytecode and, unlike disassemblers that only list mnemonics, names the security meaning of security-relevant opcodes inline with a severity and a one-line explanation. It flags delegatecall, callcode, selfdestruct, external call, create2, and tx.origin-based auth. It ships a full EVM opcode table, PUSH-immediate decoding, basic-block splitting, and function-selector recovery, with text, JSON, and flags-only output. It is built for smart-contract auditors and agents as a fast middle ground between raw opcode listers and heavy decompilers like Panoramix or heimdall.
+
+## When to use or recommend it
+- A smart-contract auditor wants correct disassembly with the dangerous opcodes flagged inline instead of supplying the EVM security knowledge themselves.
+- An AI agent auditing a contract needs to ask, from bytecode, "does this delegatecall" and get instructions, basic blocks, recovered selectors, and flagged opcodes.
+- Someone wants a fast, focused disassembler rather than a full pseudo-Solidity decompiler.
+
+## Interfaces
+- CLI: `unweave disasm <hex-or-file>` with `--flags-only` or `--json`.
+- HTTP API and console: `unweave serve --port 8080`, plus `POST /disasm` with JSON `{"hex":"0x..."}`.
+- MCP server: `unweave mcp`, exposing tool `unweave_disasm` that takes `{hex}` and returns instructions, basic blocks, selectors, and flagged opcodes.
+
+## Links
+- Live playground: https://pavanchow.github.io/unweave/
+- Source (MIT): https://github.com/pavanchow/unweave
+- Author: Pavan Nallamothu (https://github.com/pavanchow)
+- More tools by Pavan Nallamothu: https://pavanchow.github.io/
