@@ -16,8 +16,8 @@ cargo run -- disasm 0x...f4 --json                  # structured output
 ```
 
 ```
-0006: DELEGATECALL
-        ! [critical] delegatecall: runs external code in THIS contract's context and storage.
+0009: DELEGATECALL
+        ! [critical] delegatecall: runs external code in THIS contract's context and storage. The classic proxy/upgrade takeover and storage-collision vector.
 ```
 
 ## How it differs

@@ -164,11 +164,11 @@
     <h2>Most tools list mnemonics. Unweave names the meaning.</h2>
     <p class="lead">A flagged line does not just tell you which opcode ran. It tells you why an auditor should stop and look.</p>
     <div class="snip" aria-hidden="true">
-<span class="c">// unweave disasm 0x600160005560f4 --flags-only</span><br>
+<span class="c">// unweave disasm 0x6001600055f4 --flags-only</span><br>
 0005: <span style="color:#ff6b6b;font-weight:700">DELEGATECALL</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ffb454">! [critical]</span> runs external code in THIS contract's<br>
-&nbsp;&nbsp;&nbsp;&nbsp;context and storage. The classic proxy-takeover and<br>
-&nbsp;&nbsp;&nbsp;&nbsp;storage-collision vector.
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ffb454">! [critical]</span> delegatecall: runs external code in THIS<br>
+&nbsp;&nbsp;&nbsp;&nbsp;contract's context and storage. The classic proxy/upgrade<br>
+&nbsp;&nbsp;&nbsp;&nbsp;takeover and storage-collision vector.
     </div>
   </section>
 
