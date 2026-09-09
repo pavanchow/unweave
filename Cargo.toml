@@ -1,6 +1,7 @@
 [package]
 name = "unweave"
 version = "0.2.4"
+license = "MIT"
 edition = "2021"
 description = "An EVM bytecode disassembler that reconstructs intent and flags dangerous opcodes"
 
